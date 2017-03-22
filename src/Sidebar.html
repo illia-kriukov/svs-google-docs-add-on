@@ -73,14 +73,14 @@
         var user = "test@gmail.com";
         google.script.run
              .withSuccessHandler(
-              function() {
-                console.log("Success");
+              function(returnSuccess, element) {
+                console.log("Signature Request Success");
                 element.disabled = false;
               })
             .withFailureHandler(
-              function() {
-                console.log("Failure");
-                element.disabled = false;
+              function(msg, elements) {
+                console.log("Signature Request Failure");
+                //element.disabled = false;
               })
             .withUserObject(this)
             .requestSignature(user);

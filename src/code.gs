@@ -35,6 +35,7 @@ function onOpen(e) {
  *     AuthMode.NONE.)
  */
 function onInstall(e) {
+  Logger.log("Hello bitch");
   onOpen(e);
 }
 
@@ -69,20 +70,56 @@ function getSignature(signatureId){
  * @param {object} user, some data form the user
  */
 function requestSignature(user){
+  Logger.log("-requestSignature STARTED");
 
-  Logger.log("requestSignature : %s",user);
+  var timeout = 12; // 12 * 5000ms = 1minute
 
-  var ready = false;
-  while(ready === false){
+  Logger.log("requestSignature for user: %s",user);
 
-    // GET request signature status from Back End
+  for(var timer = 0; timer < timeout ; timer++){
 
-    Logger.log("GET request signature");
+    var requestResult = httpGETRequest("http://blog.stackexchange.com/");  // DUMMY API ENDPOINT
+
+    if(requestResult.getResponseCode() ===  200){
+       Logger.log("requestSignature->Success");
+
+      // request and insert the signature with the received id
+      break;
+    } else if(requestResult.getResponseCode() === 404){
+      Logger.log("requestSignature->Declined");
+
+      // alert user that an error has occurred
+      break;
+    }
     Utilities.sleep(5000);
-
   }
 
-  // handle verified || declined status
+  //check timeout
+  if(timer === timeout)
+    DocumentApp.getUi().alert('SVS request timeout');
+
+  Logger.log("-requestSignature FINISHED");
+}
 
 
+
+/**
+* Execute HTTP GET on a given url.
+*
+* @param {object} url, request url in string format.
+*/
+function httpGETRequest(url) {
+
+  var options =
+      {
+        "method"  : "GET",
+        "followRedirects" : true,
+        "muteHttpExceptions": true
+      };
+
+  var result = UrlFetchApp.fetch(url, options);
+
+  Logger.log("GET %s : %s", url, result.getResponseCode());
+
+  return result;
 }
