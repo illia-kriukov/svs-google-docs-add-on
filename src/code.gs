@@ -57,10 +57,9 @@ function showSidebar() {
  */
 function getSignature(signatureId){
 
-  // GET request to Back End
-
+  var resp = UrlFetchApp.fetch("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png"); //TODO use signatureId in the link here
   Logger.log("getSignature : %s", signatureId);
-
+  return resp.getBlob();
 }
 
 /**
@@ -80,9 +79,11 @@ function requestSignature(user){
     var requestResult = httpGETRequest("http://blog.stackexchange.com/");  // DUMMY API ENDPOINT
 
     if(requestResult.getResponseCode() ===  200){
-       Logger.log("requestSignature->Success");
+      Logger.log("requestSignature->Success");
 
-      // request and insert the signature with the received id
+      var sigId = null; // TODO request the signature id
+      var imgBlob = getSignature(sigId);
+      placeSignature(imgBlob, 60);
       break;
     } else if(requestResult.getResponseCode() === 404){
       Logger.log("requestSignature->Declined");
@@ -121,4 +122,27 @@ function httpGETRequest(url) {
   Logger.log("GET %s : %s", url, result.getResponseCode());
 
   return result;
+}
+
+/**
+* Place a signature image.
+*
+* @param {Blob} imgBlob, signature image in Blob object
+* @param {Integer} prefHeight, preferred height of an image in a document 
+*/
+function placeSignature(imgBlob, prefHeight){
+	   
+	  var doc = DocumentApp.getActiveDocument();
+	  var body = doc.getBody();
+	  var cursor = doc.getCursor();
+	  var element = cursor.getElement();
+	  var parent = element.getParent();
+	  
+	  var image = body.insertImage(parent.getChildIndex(element)+1, imgBlob);
+	  var width = image.getWidth();
+	  var height = image.getHeight();
+	  var resize = (prefHeight*1.0)/height;
+	  image.setHeight(prefHeight);
+	  image.setWidth(width*resize);
+	  
 }
