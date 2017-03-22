@@ -35,7 +35,6 @@ function onOpen(e) {
  *     AuthMode.NONE.)
  */
 function onInstall(e) {
-  Logger.log("Hello bitch");
   onOpen(e);
 }
 
