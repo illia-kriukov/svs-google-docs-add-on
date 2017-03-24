@@ -1,101 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <base target="_top">
-    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
-    <!-- The CSS package above applies Google styling to buttons and other elements. -->
-
-    <style>
-    .branding-below {
-      bottom: 56px;
-      top: 0;
-    }
-
-    .branding-text {
-      left: 7px;
-      position: relative;
-      top: 3px;
-    }
-
-    .col-contain {
-      overflow: hidden;
-    }
-
-    .col-one {
-      float: left;
-      width: 50%;
-    }
-
-    .logo {
-      vertical-align: middle;
-    }
-
-    .radio-spacer {
-      height: 20px;
-    }
-
-    .width-100 {
-      width: 100%;
-    }
-    </style>
-  </head>
-  <body>
+    <?!= include('Sidebar.css'); ?>
+</head>
+<body>
     <div class="sidebar branding-below">
-      <form>
-
-       <div class="block" id="button-bar">
-          <button class="blue" id="signature-insertion">Insert signature</button>
-        </div>
-
-      </form>
+        <form>
+            <div class="block" id="button-bar">
+                <button class="blue" id="sign-document">Sign document</button>
+            </div>
+        </form>
     </div>
 
     <div class="sidebar bottom">
-      <span class="gray branding-text">SVS Addon by Team 1</span>
+        <span class="gray branding-text">SVS Google Docs Add-on by Team A:</span>
+        <ul class="gray branding-text">
+            <li>Alain Perkaz</li>
+            <li>Illia Kriukov</li>
+            <li>Jiri Kalousek</li>
+        </ul>
+        <span class="gray branding-text">Find more on <a href="https://github.com/illia-kriukov/svs-google-docs-add-on">GitHub</a></span>
     </div>
 
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
-    </script>
-    <script>
-      /**
-       * On document load, assign click handlers.
-       */
-      $(function() {
-        $('#signature-insertion').click(runSignatureRequest);
-      });
-
-      /**
-       * Runs a server-side function to request the signature.
-       */
-      function runSignatureRequest() {
-        this.disabled = true;
-        console.log("runSignatureRequest triggered");
-        var user = "test@gmail.com";
-        google.script.run
-             .withSuccessHandler(
-              function(returnSuccess, element) {
-                console.log("Signature Request Success");
-                element.disabled = false;
-              })
-            .withFailureHandler(
-              function(msg, elements) {
-                console.log("Signature Request Failure");
-                //element.disabled = false;
-              })
-            .withUserObject(this)
-            .requestSignature(user);
-      }
-
-      /**
-       * Inserts a div that contains an error message after a given element.
-       *
-       * @param msg The error message to display.
-       * @param element The element after which to display the error.
-       */
-      function showError(msg, element) {
-        var div = $('<div id="error" class="error">' + msg + '</div>');
-        $(element).after(div);
-      }
-    </script>
-  </body>
+    <?!= include('Sidebar.js'); ?>
+</body>
 </html>

@@ -1,0 +1,49 @@
+<!-- Load the jQuery library. -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<!-- Custom client-side JavaScript code. -->
+<script>
+    var user;
+
+    // TODO Implement Login / Sign up functionality.
+    $(function () {
+        user = "test@gmail.com";
+    });
+
+    /**
+     * 'Sign document' button click handler.
+     */
+    $(function () {
+        $('#sign-document').click(runSigning);
+    });
+
+    /**
+     * Runs a server-side function to request the signature and sign the document.
+     */
+    function runSigning() {
+        this.disabled = true;
+        console.log("runSigning for user: %s", user);
+        google.script.run
+            .withSuccessHandler(function (returnSuccess, element) {
+                console.log("Success: document signed");
+                element.disabled = false;
+            })
+            .withFailureHandler(function (msg, elements) {
+                console.log("Fail: document not signed");
+                element.disabled = false;
+            })
+            .withUserObject(this)
+            .signDocument(user);
+    }
+
+    /**
+     * Inserts a div that contains an error message after a given element.
+     *
+     * @param msg The error message to display.
+     * @param element The element after which to display the error.
+     */
+    function showError(msg, element) {
+        var div = $('<div id="error" class="error">' + msg + '</div>');
+        $(element).after(div);
+    }
+</script>
