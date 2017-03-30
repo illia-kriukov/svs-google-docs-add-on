@@ -7,9 +7,24 @@
 <body>
     <div class="sidebar branding-below">
         <form>
-            <div class="block" id="button-bar">
-                <button class="blue" id="sign-document">Sign document</button>
+        
+            <div class="state-window" id="state1">
+            <!--<div class="block" id="button-bar">-->
+                <!--<button class="blue" id="sign-document">Sign document</button>-->
+                
+                <div class="sign-button-div" >
+                <a class="sign-button-a" id="sign-document">
+                  <img class="sign-button-img" src="http://www.waremakers.com/sites/default/files/pens_fountain_pen_1.png">
+                  Sign this document                
+                </a>
+                </div>
             </div>
+            
+            <div class="state-window" id="state2" style="display: none">
+             <p>Signing in progress...</p>
+             <p style="color: gray">Follow instructions <br>on your android phone.</p>
+            </div>
+            
         </form>
     </div>
 

@@ -20,21 +20,24 @@
     /**
      * Runs a server-side function to request the signature and sign the document.
      */
-    function runSigning() {
-        this.disabled = true;
-        console.log("runSigning for user: %s", user);
-        google.script.run
-            .withSuccessHandler(function (returnSuccess, element) {
-                console.log("Success: document signed");
-                element.disabled = false;
-            })
-            .withFailureHandler(function (msg, elements) {
-                console.log("Fail: document not signed");
-                element.disabled = false;
-            })
-            .withUserObject(this)
-            .signDocument(user);
-    }
+     function runSigning() {
+         //this.disabled = true;
+         changeState("state1", "state2");
+         console.log("runSigning for user: %s", user);
+         google.script.run
+             .withSuccessHandler(function (returnSuccess, element) {
+                 console.log("Success: document signed");
+                 //element.disabled = false;
+                 changeState("state2", "state1");
+             })
+             .withFailureHandler(function (msg, elements) {
+                 console.log("Fail: document not signed");
+                 //element.disabled = false;
+                 changeState("state2", "state1");
+             })
+             .withUserObject(this)
+             .signDocument(user);
+     }
 
     /**
      * Inserts a div that contains an error message after a given element.
@@ -45,5 +48,19 @@
     function showError(msg, element) {
         var div = $('<div id="error" class="error">' + msg + '</div>');
         $(element).after(div);
+    }
+    
+    /**
+     * Changes state in graphic user interface.
+     *
+     * @param oldName ID of element visible in previous state.
+     * @param newName ID of element visible in next state
+     */
+    function changeState(oldName, newName){
+        var oldEl = document.getElementById(oldName);
+        var newEl = document.getElementById(newName);
+        
+        oldEl.style.display = 'none';
+        newEl.style.display = 'block';
     }
 </script>
