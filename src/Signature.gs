@@ -3,23 +3,22 @@
  * Uses a signatureRequestID.
  *
  * @param {object} user, some data about the user
+ * @returns {object} signature id
  */
-function signDocument(user) {
+function requestSignature(user) {
     Logger.log("signDocument for user: %s", user);
     var timeout = 12; // 12 * 5000ms = 1 minute
-    var preferredHeight = 60;
+    var signatureId = null;
 
     for (var timer = 0; timer < timeout; timer++) {
         var signature = getSignature(user);
-
+        
         if (signature.getResponseCode() === 200) {
             Logger.log("signDocument -> Success");
 
-            // var signatureId = JSON.parse(response.getContentText()).signatureId; // TODO Uncomment when start using the real end-point for the signatures
-            var signatureId = null;
-            var signatureImage = getSignatureImage(signatureId);
+            signatureId = "hejhej";
+            // signatureId = JSON.parse(response.getContentText()).signatureId; // TODO Uncomment when start using the real end-point for the signatures
 
-            placeSignature(signatureImage, preferredHeight);
             break;
         } else if (signature.getResponseCode() === 404) {
             Logger.log("signDocument -> Declined");
@@ -33,6 +32,25 @@ function signDocument(user) {
     if (timer === timeout) {
         DocumentApp.getUi().alert('getSignature request timeout');
     }
+    return signatureId;
+    //throw "Declined";
+}
+
+/**
+ * Fetch signature from a server and place it into a document.
+ *
+ * @param {object} signature id
+ */
+function signDocument(signId) {
+    var preferredHeight = 60;
+  
+    // signId = JSON.parse(response.getContentText()).signatureId; // TODO Uncomment when start using the real end-point for the signatures
+    var signatureImage = getSignatureImage(signId);
+    placeSignature(signatureImage,preferredHeight);
+}  
+
+function emptyFunc(){
+  
 }
 
 /**
@@ -69,6 +87,9 @@ function getSignatureImage(signatureId, user) {
  * @param {Integer} preferredHeight, preferred height of an image in a document
  */
 function placeSignature(signatureImage, preferredHeight) {
+    if(signatureImage==null){
+      Logger.log("Signature image is null");
+    }
     var doc = DocumentApp.getActiveDocument();
     var body = doc.getBody();
     var cursor = doc.getCursor();

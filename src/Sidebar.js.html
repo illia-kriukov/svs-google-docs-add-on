@@ -4,6 +4,7 @@
 <!-- Custom client-side JavaScript code. -->
 <script>
     var user;
+    var signatureId;
 
     // TODO Implement Login / Sign up functionality.
     $(function () {
@@ -11,32 +12,101 @@
     });
 
     /**
-     * 'Sign document' button click handler.
+     * Button click handlers.
      */
     $(function () {
-        $('#sign-document').click(runSigning);
+        $('#sign-request').click(runSigning);
+        $('#sign-place').click(runPlacing);
+        $('#sign-new').click(runInitGui);
+        $('#sign-again').click(runTryAgain);
     });
 
+
     /**
-     * Runs a server-side function to request the signature and sign the document.
+     * Runs a server-side function to request the signature.
      */
      function runSigning() {
          //this.disabled = true;
          changeState("state1", "state2");
-         console.log("runSigning for user: %s", user);
+         console.log("runSigning for user: %s", user); 
+         
          google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: document signed");
+                 console.log("Success: signature obtained (id: "+returnSuccess+")");
+                 signatureId = returnSuccess; 
                  //element.disabled = false;
-                 changeState("state2", "state1");
+                 changeState("state2", "state4");
              })
              .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: document not signed");
+                 console.log("Fail: signature was not obtained");
                  //element.disabled = false;
-                 changeState("state2", "state1");
+                 changeState("state2", "state3");
              })
              .withUserObject(this)
-             .signDocument(user);
+             .requestSignature(user);
+
+     }
+     
+     /**
+     * Runs a server-side function to place the signature in the document.
+     */
+     function runPlacing() {
+          this.disabled = true;
+          google.script.run
+             .withSuccessHandler(function (returnSuccess, element) {
+                 console.log("Success: document signed");
+                 element.disabled = false;
+                 changeState("state4", "state5");
+             })
+             .withFailureHandler(function (msg, elements) {
+                 console.log("Fail: document was not signed");
+                 elements.disabled = false;
+                 changeState("state4", "state5");
+             })
+             .withUserObject(this)
+             .signDocument(signatureId);
+     }
+     
+     /**
+     * Initialize the GUI (back to first page).
+     */
+     function runInitGui(){
+          this.disabled = true;
+          google.script.run
+             .withSuccessHandler(function (returnSuccess, element) {
+                 element.disabled = false;
+                 changeState("state5", "state1");
+             })
+             .withFailureHandler(function (msg, elements) {
+                 elements.disabled = false;
+                 changeState("state5", "state1");
+             })
+             .withUserObject(this)
+             .emptyFunc();
+     }
+     
+     /**
+     * Runs a server-side function to request the signature after unsuccessful attempt.
+     */
+     function runTryAgain(){
+         this.disabled = true;
+         changeState("state3", "state2");
+         console.log("runSigning for user: %s", user); 
+         
+         google.script.run
+             .withSuccessHandler(function (returnSuccess, element) {
+                 console.log("Success: signature obtained (id: "+returnSuccess+")");
+                 element.disabled = false;
+                 signatureId = returnSuccess; 
+                 changeState("state2", "state4");               
+             })
+             .withFailureHandler(function (msg, elements) {
+                 console.log("Fail: signature was not obtained");
+                 element.disabled = false;
+                 changeState("state2", "state3");
+             })
+             .withUserObject(this)
+             .requestSignature(user);
      }
 
     /**
