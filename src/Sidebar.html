@@ -7,9 +7,40 @@
 <body>
     <div class="sidebar branding-below">
         <form>
-            <div class="block" id="button-bar">
-                <button class="blue" id="sign-document">Sign document</button>
+        
+            <div class="state-window" id="state1">                
+              <div class="sign-button-div" >
+              <a class="sign-button-a" id="sign-request">
+                <img class="sign-button-img" src="http://www.waremakers.com/sites/default/files/pens_fountain_pen_1.png">
+                Sign this document                
+              </a>
+              </div>
             </div>
+            
+            <div class="state-window" id="state2" style="display: none">
+             <p>Signing in progress...</p>
+             <p style="color: gray">Follow instructions <br>on your android phone.</p>
+            </div>
+            
+            <div class="state-window" id="state3" style="display: none">
+             <p>Signature declined</p>
+             <img class="state-img" src="https://cdn.pixabay.com/photo/2012/04/12/20/12/x-30465_960_720.png"><br><br>
+             <button id="sign-again">Try again</button>
+            </div>
+            
+            <div class="state-window" id="state4" style="display: none">
+             <p>Signature obtained</p>
+             <p style="color: gray">Put the cursor where<br> you wish to place the<br> signature and click the<br> following button.</p>
+             <button id="sign-place">Place signature</button>
+            </div>
+            
+            <div class="state-window" id="state5" style="display: none">
+             <p>Document signed</p>
+             <img class="state-img" src="https://www.shareicon.net/data/128x128/2016/08/20/817721_check_512x512.png"><br><br>
+             <button id="sign-new">New signature</button>
+            </div>
+            
+            
         </form>
     </div>
 
