@@ -8,7 +8,14 @@
     <div class="sidebar branding-below">
         <form>
         
-            <div class="state-window" id="state1">                
+            <div class="state-window" id="state0">
+             <p>Sign in to SVS</p><br>
+             <input class="signin-input" type="text" id="username" placeholder="Username"><br><br>
+             <input class="signin-input" type="password" id="password" placeholder="Password"><br><br>
+             <button class="signin-input" id="sign-in">Sign in</button>
+            </div>
+        
+            <div class="state-window" id="state1" style="display: none">                
               <div class="sign-button-div" >
               <a class="sign-button-a" id="sign-request">
                 <img class="sign-button-img" src="http://www.waremakers.com/sites/default/files/pens_fountain_pen_1.png">
@@ -40,6 +47,9 @@
              <button id="sign-new">New signature</button>
             </div>
             
+            <div class="error" id="error">
+            
+            </div>
             
         </form>
     </div>
@@ -52,6 +62,7 @@
             <li>Jiri Kalousek</li>
         </ul>
         <span class="gray branding-text">Find more on <a href="https://github.com/illia-kriukov/svs-google-docs-add-on">GitHub</a></span>
+        <button class="signout-input" id="sign-out" style="display: none">Sign out</button>
     </div>
 
     <?!= include('Sidebar.js'); ?>
