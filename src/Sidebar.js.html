@@ -4,7 +4,8 @@
 <!-- Custom client-side JavaScript code. -->
 <script>
     var user;
-    var signatureId;
+    var signatureImageId;
+    var token;
 
     var currentState;
     //this should depend on a session or token saved (either state0 or state1)
@@ -56,7 +57,7 @@
 
              })
              .withFailureHandler(function (msg, elements) {
-                 console.log("Login failed"+msg + " | " + elements);
+                 console.log("Login failed"+msg + " ::: " + elements);
                  elements.disabled = false;
 
              })
@@ -93,11 +94,13 @@
      function runSigning() {
          //this.disabled = true;
          changeState("state2");
-         console.log("runSigning for user: %s", user);
+         console.log("requesting signature for user: %s", user);
+
+         token = localStorage.getItem('accessToken');
 
          google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: signature obtained (id: "+returnSuccess+")");
+                 console.log("Success: signature obtained (signatureImageId: "+returnSuccess+")");
                  signatureId = returnSuccess;
                  //element.disabled = false;
                  changeState("state4");
@@ -108,7 +111,7 @@
                  changeState("state3");
              })
              .withUserObject(this)
-             .requestSignature(user);
+             .requestSignature(token);
 
      }
 
