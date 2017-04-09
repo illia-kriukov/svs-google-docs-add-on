@@ -5,7 +5,7 @@
 <script>
     var user;
     var signatureId;
-    
+
     var currentState;
     //this should depend on a session or token saved (either state0 or state1)
     changeState("state0");
@@ -19,13 +19,13 @@
      * Button click handlers.
      */
     $(function () {
+        $('#sign-in').click(runLogin);
+        $('#sign-out').click(runLogout);
+
         $('#sign-request').click(runSigning);
         $('#sign-place').click(runPlacing);
         $('#sign-new').click(runInitGui);
         $('#sign-again').click(runTryAgain);
-        
-        $('#sign-in').click(runLogin);
-        $('#sign-out').click(runLogout);
     });
 
     /**
@@ -33,51 +33,50 @@
      */
     function runLogin(){
         this.disabled = true;
-        console.log("Signing in..."); 
+        console.log("Signing in...");
         var username =  $('#username').val();
         var password =  $('#password').val();
-        
+
         google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Login success");
                  if(returnSuccess!="invalid"){
                     changeState("state1");
                     $('#sign-out').show();
-                    //TODO save token
-                 }
-                 else{
+                    /* TODO - save token */
+                 } else {
                     console.log("Token invalid");
                     $('#error').text("Login failed");
                     //showError("Login failed","#state0");
                  }
                  element.disabled = false;
-                 
+
              })
              .withFailureHandler(function (msg, elements) {
                  console.log("Login failed");
                  elements.disabled = false;
-                 
+
              })
              .withUserObject(this)
              .login(username,password);
     }
-    
+
     /**
      * Handle sign out.
      */
     function runLogout(){
         this.disabled = true;
         console.log("Signing out...");
-        
+
         google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
-                 $('#sign-out').hide(); 
+                 $('#sign-out').hide();
                  changeState("state0");
                  element.disabled = false;
              })
              .withFailureHandler(function (msg, elements) {
                  elements.disabled = false;
-                 
+
              })
              .withUserObject(this)
              .emptyFunc();
@@ -89,12 +88,12 @@
      function runSigning() {
          //this.disabled = true;
          changeState("state2");
-         console.log("runSigning for user: %s", user); 
-         
+         console.log("runSigning for user: %s", user);
+
          google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Success: signature obtained (id: "+returnSuccess+")");
-                 signatureId = returnSuccess; 
+                 signatureId = returnSuccess;
                  //element.disabled = false;
                  changeState("state4");
              })
@@ -107,7 +106,7 @@
              .requestSignature(user);
 
      }
-     
+
      /**
      * Runs a server-side function to place the signature in the document.
      */
@@ -127,7 +126,7 @@
              .withUserObject(this)
              .signDocument(signatureId);
      }
-     
+
      /**
      * Initialize the GUI (back to first page).
      */
@@ -145,21 +144,21 @@
              .withUserObject(this)
              .emptyFunc();
      }
-     
+
      /**
      * Runs a server-side function to request the signature after unsuccessful attempt.
      */
      function runTryAgain(){
          this.disabled = true;
          changeState("state2");
-         console.log("runSigning for user: %s", user); 
-         
+         console.log("runSigning for user: %s", user);
+
          google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Success: signature obtained (id: "+returnSuccess+")");
                  element.disabled = false;
-                 signatureId = returnSuccess; 
-                 changeState("state4");               
+                 signatureId = returnSuccess;
+                 changeState("state4");
              })
              .withFailureHandler(function (msg, elements) {
                  console.log("Fail: signature was not obtained");
@@ -181,7 +180,7 @@
         var div = $('<div id="error" class="error">' + msg + '</div>');
         $(element).after(div);
     }
-    
+
     /**
      * Changes state in graphic user interface.
      *
@@ -193,7 +192,7 @@
          var oldEl = document.getElementById(currentState);
          oldEl.style.display = 'none';
         }
-        
+
         var newEl = document.getElementById(newName);
         newEl.style.display = 'block';
         currentState = newName;
