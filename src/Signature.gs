@@ -12,7 +12,7 @@ function requestSignature(user) {
 
     for (var timer = 0; timer < timeout; timer++) {
         var signature = getSignature(user);
-        
+
         if (signature.getResponseCode() === 200) {
             Logger.log("signDocument -> Success");
 
@@ -43,14 +43,14 @@ function requestSignature(user) {
  */
 function signDocument(signId) {
     var preferredHeight = 60;
-  
+
     // signId = JSON.parse(response.getContentText()).signatureId; // TODO Uncomment when start using the real end-point for the signatures
     var signatureImage = getSignatureImage(signId);
     placeSignature(signatureImage,preferredHeight);
-}  
+}
 
 function emptyFunc(){
-  
+
 }
 
 /**
@@ -64,7 +64,7 @@ function getSignature(user) {
     // TODO Perhaps we should also send id of the document, then server can handle signatures for several documents of one user at the same time.
     // var documentId = DocumentApp.getActiveDocument().id;
     Logger.log("getSignature for user: %s", user);
-    return httpGETRequest("http://blog.stackexchange.com/", user); // TODO Change to real end-point
+    return oldHttpGETRequest("http://blog.stackexchange.com/", user); // TODO Change to real end-point
 }
 
 /**
@@ -76,7 +76,7 @@ function getSignature(user) {
 function getSignatureImage(signatureId, user) {
     Logger.log("getSignatureImage for id: %s", signatureId);
     // TODO Use signatureId in the link here
-    var response = httpGETRequest("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png", user);
+    var response = oldHttpGETRequest("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png", user);
     return response.getBlob();
 }
 
@@ -106,12 +106,14 @@ function placeSignature(signatureImage, preferredHeight) {
 }
 
 /**
+ * TODO deprecated old method
+ *
  * Execute HTTP GET on a given url.
  *
  * @param {object} url, request url in string format.
  * @returns {object} HTTP response
  */
-function httpGETRequest(url, user) {
+function oldHttpGETRequest(url, user) {
     // TODO Add user credentials and/or token to the request
     var options = {
         "method": "GET",
