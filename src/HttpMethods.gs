@@ -48,7 +48,7 @@ function httpPOSTRequest(url, auth, body) {
   // request headers
   var headers = {
     Authorization: auth
-  };
+  }; 
 
   // requests body
   var data = body;
