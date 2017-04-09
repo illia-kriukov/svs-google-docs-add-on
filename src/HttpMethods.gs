@@ -48,7 +48,7 @@ function httpPOSTRequest(url, auth, body) {
   // request headers
   var headers = {
     Authorization: auth
-  }; 
+  };
 
   // requests body
   var data = body;
@@ -68,4 +68,19 @@ function httpPOSTRequest(url, auth, body) {
 
     Logger.log("POST %s : %s", url, response.getResponseCode());
     return response;
+}
+
+
+/**
+ * Extract body attribute value from HTTPResponse
+ *
+ * @param {object} response, HTTPResponse object.
+ * @param {object} attribute, string key of attribute.
+ * @returns {object} attribute value.
+ */
+function getAttributeFromHTTPResponse(response, attribute){
+
+    var responseBodyJSON  = response.getContentText();
+    var data = JSON.parse(responseBodyJSON);
+    return data[attribute];
 }
