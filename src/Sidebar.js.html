@@ -10,6 +10,7 @@
     //this should depend on a session or token saved (either state0 or state1)
     changeState("state0");
 
+
     // TODO Implement Login / Sign up functionality.
     $(function () {
         user = "test@gmail.com";
@@ -41,9 +42,11 @@
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Login success");
                  if(returnSuccess!="invalid"){
+                    // save token
+                    localStorage.setItem( 'accessToken', returnSuccess);
+
                     changeState("state1");
                     $('#sign-out').show();
-                    /* TODO - save token */
                  } else {
                     console.log("Token invalid");
                     $('#error').text("Login failed");
@@ -53,7 +56,7 @@
 
              })
              .withFailureHandler(function (msg, elements) {
-                 console.log("Login failed");
+                 console.log("Login failed"+msg + " | " + elements);
                  elements.disabled = false;
 
              })
@@ -72,6 +75,8 @@
              .withSuccessHandler(function (returnSuccess, element) {
                  $('#sign-out').hide();
                  changeState("state0");
+                 // erase token
+                 localStorage.removeItem('accessToken');
                  element.disabled = false;
              })
              .withFailureHandler(function (msg, elements) {

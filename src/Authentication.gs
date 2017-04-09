@@ -12,8 +12,12 @@ var loginUrl =  baseUrl+ '/oauth/token';
 function login(username, password) {
   Logger.log("Username and password: %s, %s", username,password);
 
-  /*TODO - fake login */
-  return 'token';
+  /* - TODO fake login - */
+  //console.log('fakeLogin on');
+  Logger.log('fakeToken saved');
+  return 'token1234';
+  /* --- */
+
 
   // construct the auth type
   var auth = 'c3ZzOnNlY3JldA==';
@@ -30,18 +34,17 @@ function login(username, password) {
 
   // send POST request to endpoint and retrieve token
   var response = httpPOSTRequest(loginUrl , auth, body);
-  var responseBodyJSON  = response.getContentText();
-  var data = JSON.parse(responseBodyJSON);
-
-  var outcome;
 
   if( response.getResponseCode() === '200'){
-    // retrieve token
-    outcome = data.accessToken;
+
+    // return token
+    var responseBodyJSON  = response.getContentText();
+    var data = JSON.parse(responseBodyJSON);
+    return data.accessToken;
   } else {
-    // set 'invalid'
-    outcome = 'invalid';
+
+    // return 'invalid'
+    return 'invalid';
   }
 
-  return token;
 }
