@@ -43,6 +43,9 @@
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Login success");
                  if(returnSuccess!="invalid"){
+                    // save username
+                    user = username;
+
                     // save token
                     localStorage.setItem( 'accessToken', returnSuccess);
 
@@ -82,7 +85,6 @@
              })
              .withFailureHandler(function (msg, elements) {
                  elements.disabled = false;
-
              })
              .withUserObject(this)
              .emptyFunc();
@@ -94,7 +96,7 @@
      function runSigning() {
          //this.disabled = true;
          changeState("state2");
-         console.log("requesting signature for user: %s", user);
+         console.log("Requesting signature for user: %s", user);
 
          token = localStorage.getItem('accessToken');
 

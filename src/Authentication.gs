@@ -1,3 +1,6 @@
+/* Circuit breaking constant*/
+var backendDissabled = true;
+
 /* TODO - Replace with valid baseUrl */
 var baseUrl = 'https://www.google.se';
 var loginUrl =  baseUrl+ '/oauth/token';
@@ -12,11 +15,11 @@ var loginUrl =  baseUrl+ '/oauth/token';
 function login(username, password) {
   Logger.log("Username and password: %s, %s", username,password);
 
-  /* - TODO fake login - */
-  //console.log('fakeLogin on');
-  Logger.log('fakeToken saved');
-  return 'token1234';
-  /* --- */
+  // circuit breaker
+  if(backendDissabled){
+    Logger.log('fakeToken saved');
+    return 'token1234';
+  }
 
 
   // construct the auth type
@@ -38,9 +41,8 @@ function login(username, password) {
   if( response.getResponseCode() === '200'){
 
     // return token
-    var responseBodyJSON  = response.getContentText();
-    var data = JSON.parse(responseBodyJSON);
-    return data.accessToken;
+    var accessToken = getAttributeFromHTTPResponse(response, 'accessToken');
+    return accessToken;
   } else {
 
     // return 'invalid'

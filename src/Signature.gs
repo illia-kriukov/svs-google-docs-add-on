@@ -1,6 +1,9 @@
+/* Circuit breaking constant*/
+var backendDissabled = true;
+
 /* TODO - Replace with valid baseUrl */
 var baseUrl = 'https://www.google.se';
-var signatureRequestUrl = baseUrl + '/signature_requests/';
+var signatureRequestUrl = baseUrl + '/signature_requests/';  //base/signature_requests/{signatureRequestId}
 var signatureImageUrl = baseUrl + '/images/'; // base/images/{imageId}.png
 
 /**
@@ -10,11 +13,14 @@ var signatureImageUrl = baseUrl + '/images/'; // base/images/{imageId}.png
  * @returns {object} signatureImageId
  */
 function requestSignature(token) {
-    Logger.log("signDocument with toke: %s", token);
-    var timeout = 20; // 20 * 3000ms = 1 minute
+    Logger.log("signDocument with token: %s", token);
     var signatureRequestId  = null;
     var signatureImageId = null;
 
+    // circuit breaker
+    if(backendDissabled){
+      return 'fakeSignatureImageId';
+    }
 
     // request signature -> get signatureRequestId
     var auth =  "Bearer "+token;
@@ -23,29 +29,43 @@ function requestSignature(token) {
     if( response.getResponseCode() === 200){
 
       signatureRequestId =  getAttributeFromHTTPResponse(response, 'id');
+      var url = signatureImageUrl + signatureRequestId;
+
+      // pull the request id until answer/timeout
+      signatureImageId = periodicSignatureStatusPull(url, token);
 
     } else {
 
-      return 'invalid';
+      signatureImageId = 'invalid';
     }
 
+   return signatureImageId;
+}
 
-    // request the signature request status every 3s for 1 minute
+
+/**
+ * Request the signature image id periodically from a given url
+ *
+ * @param {object} url, url of the resource
+ * @returns {object} signatureImageId, the id of the siganture's image
+ */
+function periodicSignatureStatusPull(url, token){
+    var timeout = 20; // 20 * 3000ms = 1 minute
+
     for (var timer = 0; timer < timeout; timer++) {
-        var url = signatureImageUrl + signatureRequestId;
+
         response = httpGETRequest(url, token, null);
 
         // extract body and filter (status is nested in body)
         var status = getAttributeFromHTTPResponse(response, 'status');
 
-        // analyze status
 
+        // check status
         if( status === 'denied'){
-          return 'invalid';
-        }
 
-        if( status === 'approved'){
-          // signature image ready
+          return 'invalid';
+        } else if( status === 'approved'){
+
           signatureImageId = getAttributeFromHTTPResponse(response, 'imageId');
           return signatureImageId;
         }
@@ -53,12 +73,11 @@ function requestSignature(token) {
         Utilities.sleep(3000);
     }
 
-    // should not reach
-    if (timer === timeout)
-        DocumentApp.getUi().alert('getSignature request timeout');
-
-    return 'invalid';
+   // should not reach
+   DocumentApp.getUi().alert('getSignature request timeout');
+   return 'invalid';
 }
+
 
 /**
  * Fetch signature from a server and place it into a document.
@@ -68,12 +87,14 @@ function requestSignature(token) {
 function signDocument(token, signatureImageId) {
     var preferredHeight = 60;
 
-    /* TODO  dummy code until api ready */
-    var signatureImage = oldGetSignatureImage(signatureImageId);
-    placeSignature(signatureImage,preferredHeight);
-    return;
-    /* --- */
+    // circuit breaker
+    if(backendDissabled){
+       var signatureImage = getFakeSignatureImage(signatureImageId);
+       placeSignature(signatureImage,preferredHeight);
+       return;
+    }
 
+    // request image
     var url = signatureImageUrl + signatureImageId + '.png';
     var image  = httpGETRequest(url, token, null);
 
@@ -90,43 +111,17 @@ function emptyFunc(){
 }
 
 
-
-
-
-
-/* OLD AND UN-USED METHODS */
-
-
-/**
- * Request signature request status from server
- * Server returns status and signatureImageId
- *
- * @param {object} token, user token
- * @param {object} signatureRequestId, signature request ID
- * @returns {object} imageId
- */
-function _getSignatureRequestStatus(token, signatureRequestId) {
-    // POST request
-    httpPOSTRequest();
-
-    // TODO Perhaps we should also send id of the document, then server can handle signatures for several documents of one user at the same time.
-    // var documentId = DocumentApp.getActiveDocument().id;
-    Logger.log("getSignature for user: %s", user);
-    return oldHttpGETRequest("http://blog.stackexchange.com/", user); // TODO Change to real end-point
-}
-
 /**
  * Fetch the signature image from the back end using the ID.
  *
  * @param {object} signatureId, the unique identifier of a user signature.
  * @returns {object} signature image
  */
-function oldGetSignatureImage(signatureId, user) {
-    Logger.log("oldGetSignatureImage for id: %s", signatureId);
-    // TODO Use signatureId in the link here
-    var response = oldHttpGETRequest("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png", user);
-    return response.getBlob();
+function getFakeSignatureImage(signatureId) {
+   var response = oldHttpGETRequest("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png");
+   return response.getBlob();
 }
+
 
 /**
  * Place a signature image.
@@ -153,24 +148,21 @@ function placeSignature(signatureImage, preferredHeight) {
     image.setWidth(width * resize);
 }
 
+
 /**
- * TODO deprecated old method
+ * Deprecated old method
  *
  * Execute HTTP GET on a given url.
  *
  * @param {object} url, request url in string format.
  * @returns {object} HTTP response
  */
-function oldHttpGETRequest(url, user) {
-    // TODO Add user credentials and/or token to the request
+function oldHttpGETRequest(url) {
     var options = {
         "method": "GET",
         "followRedirects": true,
         "muteHttpExceptions": true
     };
 
-    var response = UrlFetchApp.fetch(url, options);
-
-    Logger.log("GET %s : %s", url, response.getResponseCode());
-    return response;
+    return UrlFetchApp.fetch(url, options);
 }
