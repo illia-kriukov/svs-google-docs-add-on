@@ -6,30 +6,25 @@
  * @param {object} body, request body in JS object format.
  * @returns {object} HTTP response
  */
-function httpGETRequest(url, auth, body) {
-
-  // request headers
-  var headers = {
-    Authorization: auth
-  };
-
-  // requests body
-  var data = body;
+function httpGETRequest(url, headers) {
 
   // request options
   var options = {
     'method' : 'GET',
     'headers': headers,
     'contentType': 'application/json',
-    // Convert the JavaScript object to a JSON string.
-    'payload' : JSON.stringify(data),
-    "followRedirects": true,
-    "muteHttpExceptions": true
+    'followRedirects': true,
+    'muteHttpExceptions': true,
+    'crossDomain': true,
+    'async': true,
+    'validateHttpsCertificates': false
   };
 
     var response = UrlFetchApp.fetch(url, options);
 
     Logger.log("GET %s : %s", url, response.getResponseCode());
+    Logger.log("GET %s : %s", url, response);
+
     return response;
 }
 
@@ -43,30 +38,31 @@ function httpGETRequest(url, auth, body) {
  * @param {object} body, request body in JS object format.
  * @returns {object} HTTP response
  */
-function httpPOSTRequest(url, auth, body) {
-
-  // request headers
-  var headers = {
-    Authorization: auth
-  };
-
-  // requests body
-  var data = body;
+function httpPOSTRequest(url, headers, body) {
 
   // request options
-  var options = {
-    'method' : 'POST',
-    'headers': headers,
-    'contentType': 'application/json',
-    // Convert the JavaScript object to a JSON string.
-    'payload' : JSON.stringify(data),
-    "followRedirects": true,
-    "muteHttpExceptions": true
-  };
+  if(body){
+    var options = {
+     'method' : 'POST',
+     'headers': headers,
+     'payload' : body,
+     'followRedirects': true,
+     'muteHttpExceptions': true
+    };
+  }else{
+    var options = {
+      'method' : 'POST',
+      'headers': headers,
+      'followRedirects': true,
+      'muteHttpExceptions': true
+    };
+  }
 
     var response = UrlFetchApp.fetch(url, options);
 
-    Logger.log("POST %s : %s", url, response.getResponseCode());
+   Logger.log("POST %s : %s", url, response.getResponseCode());
+   Logger.log("POST %s : %s", url, response);
+
     return response;
 }
 
@@ -80,7 +76,11 @@ function httpPOSTRequest(url, auth, body) {
  */
 function getAttributeFromHTTPResponse(response, attribute){
 
-    var responseBodyJSON  = response.getContentText();
-    var data = JSON.parse(responseBodyJSON);
-    return data[attribute];
+    var object = response;
+
+    var responseBodyJSON  = JSON.parse(response);
+    Logger.log('From: %s',response);
+    Logger.log('Extracting: %s',responseBodyJSON[''+attribute]);
+
+    return responseBodyJSON[''+attribute];
 }

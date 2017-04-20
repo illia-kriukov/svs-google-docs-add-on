@@ -1,210 +1,186 @@
-<!-- Load the jQuery library. -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+/* TODO - Replace with valid baseUrl */
+var baseUrl = 'http://signature-verification.us-east-1.elasticbeanstalk.com';
+var signatureRequestUrl = baseUrl + '/signature_requests';  //base/signature_requests/{signatureRequestId}
+var signatureImageUrl = baseUrl + '/images/'; // base/images/{imageId}.png
 
-<!-- Custom client-side JavaScript code. -->
-<script>
-    var user;
-    var signatureImageId;
-    var token;
+/**
+ * Request the signature status id and query the status periodically (using 'signatureRequestId').
+ *
+ * @param {object} token, user's access token
+ * @returns {object} signatureImageId
+ */
+function requestSignature(token) {
+    Logger.log("Sign Request with token: %s", token);
+    var signatureRequestId  = null;
+    var signatureImageId = null;
 
-    var currentState;
-    //this should depend on a session or token saved (either state0 or state1)
-    changeState("state0");
-
-
-    // TODO Implement Login / Sign up functionality.
-    $(function () {
-        user = "test@gmail.com";
-    });
-
-    /**
-     * Button click handlers.
-     */
-    $(function () {
-        $('#sign-in').click(runLogin);
-        $('#sign-out').click(runLogout);
-
-        $('#sign-request').click(runSigning);
-        $('#sign-place').click(runPlacing);
-        $('#sign-new').click(runInitGui);
-        $('#sign-again').click(runTryAgain);
-    });
-
-    /**
-     * Runs a server-side function to obtain a token from backend.
-     */
-    function runLogin(){
-        this.disabled = true;
-        console.log("Signing in...");
-        var username =  $('#username').val();
-        var password =  $('#password').val();
-
-        google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Login success");
-                 if(returnSuccess!="invalid"){
-                    // save username
-                    user = username;
-
-                    // save token
-                    localStorage.setItem( 'accessToken', returnSuccess);
-
-                    changeState("state1");
-                    $('#sign-out').show();
-                 } else {
-                    console.log("Token invalid");
-                    $('#error').text("Login failed");
-                    //showError("Login failed","#state0");
-                 }
-                 element.disabled = false;
-
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Login failed"+msg + " ::: " + elements);
-                 elements.disabled = false;
-
-             })
-             .withUserObject(this)
-             .login(username,password);
+    // circuit breaker
+    if(backendDissabled){
+      return 'fakeSignatureImageId';
     }
 
-    /**
-     * Handle sign out.
-     */
-    function runLogout(){
-        this.disabled = true;
-        console.log("Signing out...");
 
-        google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 $('#sign-out').hide();
-                 changeState("state0");
-                 // erase token
-                 localStorage.removeItem('accessToken');
-                 element.disabled = false;
-             })
-             .withFailureHandler(function (msg, elements) {
-                 elements.disabled = false;
-             })
-             .withUserObject(this)
-             .emptyFunc();
+    // construct the POST headers
+     var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer '+ token,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    Logger.log("Request signatureRequestId");
+    Logger.log("POST on: %s",signatureRequestUrl);
+    Logger.log("POST with: %s",headers);
+    var response = httpPOSTRequest(signatureRequestUrl, headers, "");
+
+    if( response.getResponseCode() == 200 || response.getResponseCode() == 201){
+
+      Logger.log("GOOD signatureRequestId");
+      signatureRequestId =  getAttributeFromHTTPResponse(response, 'id');
+      Logger.log("Signature Request Id: %s ",signatureRequestId);
+      var url = signatureRequestUrl + '/' + signatureRequestId;
+
+      // pull the request id until answer/timeout
+      signatureImageId = periodicSignatureStatusPull(url, token);
+
+    } else {
+
+      Logger.log("INVALID signatureRequestId");
+      signatureImageId = 'invalid';
     }
 
-    /**
-     * Runs a server-side function to request the signature.
-     */
-     function runSigning() {
-         //this.disabled = true;
-         changeState("state2");
-         console.log("Requesting signature for user: %s", user);
+   return signatureImageId;
+}
 
-         token = localStorage.getItem('accessToken');
 
-         google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: signature obtained (signatureImageId: "+returnSuccess+")");
-                 signatureId = returnSuccess;
-                 //element.disabled = false;
-                 changeState("state4");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: signature was not obtained");
-                 //element.disabled = false;
-                 changeState("state3");
-             })
-             .withUserObject(this)
-             .requestSignature(token);
+/**
+ * Request the signature image id periodically from a given url
+ *
+ * @param {object} url, url of the resource
+ * @returns {object} signatureImageId, the id of the siganture's image
+ */
+function periodicSignatureStatusPull(url, token){
+    var timeout = 20; // 20 * 3000ms = 1 minute
 
-     }
+    for (var timer = 0; timer < timeout; timer++) {
 
-     /**
-     * Runs a server-side function to place the signature in the document.
-     */
-     function runPlacing() {
-          this.disabled = true;
-          google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: document signed");
-                 element.disabled = false;
-                 changeState("state5");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: document was not signed");
-                 elements.disabled = false;
-                 changeState("state5");
-             })
-             .withUserObject(this)
-             .signDocument(signatureId);
-     }
+      Logger.log('Periodically pull status');
 
-     /**
-     * Initialize the GUI (back to first page).
-     */
-     function runInitGui(){
-          this.disabled = true;
-          google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 element.disabled = false;
-                 changeState("state1");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 elements.disabled = false;
-                 changeState("state1");
-             })
-             .withUserObject(this)
-             .emptyFunc();
-     }
+      // construct the POST headers
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer '+ token,
+        'Content-Type': 'application/x-www-form-urlencoded'
+       };
 
-     /**
-     * Runs a server-side function to request the signature after unsuccessful attempt.
-     */
-     function runTryAgain(){
-         this.disabled = true;
-         changeState("state2");
-         console.log("runSigning for user: %s", user);
+        response = httpGETRequest(url, headers);
 
-         google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: signature obtained (id: "+returnSuccess+")");
-                 element.disabled = false;
-                 signatureId = returnSuccess;
-                 changeState("state4");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: signature was not obtained");
-                 element.disabled = false;
-                 changeState("state3");
-             })
-             .withUserObject(this)
-             .requestSignature(user);
-     }
+        // extract body and filter (status is nested in body)
+        var status = getAttributeFromHTTPResponse(response, 'status');
 
-    /**
-     * Inserts a div that contains an error message after a given element.
-     *
-     * @param msg The error message to display.
-     * @param element The element after which to display the error.
-     */
-    function showError(msg, element) {
-        //$("error").remove();
-        var div = $('<div id="error" class="error">' + msg + '</div>');
-        $(element).after(div);
-    }
 
-    /**
-     * Changes state in graphic user interface.
-     *
-     * @param oldName ID of element visible in previous state.
-     * @param newName ID of element visible in next state
-     */
-    function changeState(newName){
-        if(currentState!=undefined){
-         var oldEl = document.getElementById(currentState);
-         oldEl.style.display = 'none';
+        // check status
+        if( status === 'denied'){
+
+          return 'invalid';
+        } else if( status === 'approved'){
+
+          signatureImageId = getAttributeFromHTTPResponse(response, 'id');
+          return signatureImageId;
         }
 
-        var newEl = document.getElementById(newName);
-        newEl.style.display = 'block';
-        currentState = newName;
+        Utilities.sleep(3000);
     }
-</script>
+
+   // should not reach
+   DocumentApp.getUi().alert('getSignature request timeout');
+   return 'invalid';
+}
+
+
+/**
+ * Fetch signature from a server and place it into a document.
+ *
+ * @param {object} signatureImageId
+ */
+function signDocument(token, signatureImageId) {
+    var preferredHeight = 60;
+
+    // circuit breaker
+    if(backendDissabled){
+       var signatureImage = getFakeSignatureImage(signatureImageId);
+       placeSignature(signatureImage,preferredHeight);
+       return;
+    }
+
+    // request image
+    var url = signatureImageUrl + signatureImageId + '.png';
+    var image  = httpGETRequest(url, token, null);
+
+    placeSignature(image,preferredHeight);
+}
+
+
+/**
+*
+* Prevent the bug of new chrome tab open when button clicked
+*
+*/
+function emptyFunc(){
+}
+
+
+/**
+ * Fetch the signature image from the back end using the ID.
+ *
+ * @param {object} signatureId, the unique identifier of a user signature.
+ * @returns {object} signature image
+ */
+function getFakeSignatureImage(signatureId) {
+   var response = oldHttpGETRequest("https://raw.githubusercontent.com/ww6015132/SilkySignature/master/signature.png");
+   return response.getBlob();
+}
+
+
+/**
+ * Place a signature image.
+ *
+ * @param {Blob} signatureImage, signature image in Blob object
+ * @param {Integer} preferredHeight, preferred height of an image in a document
+ */
+function placeSignature(signatureImage, preferredHeight) {
+    if(signatureImage==null){
+      Logger.log("Signature image is null");
+    }
+    var doc = DocumentApp.getActiveDocument();
+    var body = doc.getBody();
+    var cursor = doc.getCursor();
+    var element = cursor.getElement();
+    var parent = element.getParent();
+
+    var image = body.insertImage(parent.getChildIndex(element) + 1, signatureImage);
+    var width = image.getWidth();
+    var height = image.getHeight();
+    var resize = (preferredHeight * 1.0) / height;
+
+    image.setHeight(preferredHeight);
+    image.setWidth(width * resize);
+}
+
+
+/**
+ * Deprecated old method
+ *
+ * Execute HTTP GET on a given url.
+ *
+ * @param {object} url, request url in string format.
+ * @returns {object} HTTP response
+ */
+function oldHttpGETRequest(url) {
+    var options = {
+        "method": "GET",
+        "followRedirects": true,
+        "muteHttpExceptions": true
+    };
+
+    return UrlFetchApp.fetch(url, options);
+}
