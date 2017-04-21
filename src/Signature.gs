@@ -59,7 +59,7 @@ function requestSignature(token) {
  * @returns {object} signatureImageId, the id of the siganture's image
  */
 function periodicSignatureStatusPull(url, token){
-    var timeout = 20; // 20 * 3000ms = 1 minute
+    var timeout = 40; // 40 * 3000ms = 2 minute
 
     for (var timer = 0; timer < timeout; timer++) {
 
@@ -103,6 +103,9 @@ function periodicSignatureStatusPull(url, token){
  * @param {object} signatureImageId
  */
 function signDocument(token, signatureImageId) {
+
+  Logger.log("SignDoc: %s || %s",token, signatureImageId);
+
     var preferredHeight = 60;
 
     // circuit breaker
@@ -112,9 +115,16 @@ function signDocument(token, signatureImageId) {
        return;
     }
 
+    var headers = {
+        'Authorization': 'Bearer '+ token
+    };
+
+
     // request image
     var url = signatureImageUrl + signatureImageId + '.png';
-    var image  = httpGETRequest(url, token, null);
+    var response  = httpGETRequest(url, headers);
+
+    var image = response.getBlob();
 
     placeSignature(image,preferredHeight);
 }

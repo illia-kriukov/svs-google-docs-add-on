@@ -54,7 +54,9 @@
                     $('#sign-out').show();
                  } else {
                     console.log("Token invalid");
-                    $('#error').text("Login failed");
+
+                    alert('Login failed');
+
                     //showError("Login failed","#state0");
                  }
                  element.disabled = false;
@@ -141,7 +143,7 @@
                  changeState("state5");
              })
              .withUserObject(this)
-             .signDocument(signatureId);
+             .signDocument(token, signatureId);
      }
 
      /**
