@@ -84,7 +84,7 @@ function periodicSignatureStatusPull(url, token){
           return 'invalid';
         } else if( status === 'approved'){
 
-          signatureImageId = getAttributeFromHTTPResponse(response, 'id');
+          signatureImageId = getAttributeFromHTTPResponse(response, 'imageId');
           return signatureImageId;
         }
 
