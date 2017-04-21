@@ -1,9 +1,6 @@
-/* Circuit breaking constant*/
-var backendDissabled = true;
-
 /* TODO - Replace with valid baseUrl */
-var baseUrl = 'https://www.google.se';
-var signatureRequestUrl = baseUrl + '/signature_requests/';  //base/signature_requests/{signatureRequestId}
+var baseUrl = 'http://signature-verification.us-east-1.elasticbeanstalk.com';
+var signatureRequestUrl = baseUrl + '/signature_requests';  //base/signature_requests/{signatureRequestId}
 var signatureImageUrl = baseUrl + '/images/'; // base/images/{imageId}.png
 
 /**
@@ -13,7 +10,7 @@ var signatureImageUrl = baseUrl + '/images/'; // base/images/{imageId}.png
  * @returns {object} signatureImageId
  */
 function requestSignature(token) {
-    Logger.log("signDocument with token: %s", token);
+    Logger.log("Sign Request with token: %s", token);
     var signatureRequestId  = null;
     var signatureImageId = null;
 
@@ -22,20 +19,32 @@ function requestSignature(token) {
       return 'fakeSignatureImageId';
     }
 
-    // request signature -> get signatureRequestId
-    var auth =  "Bearer "+token;
-    var response = httpPOSTRequest(signatureRequestUrl, auth, null);
 
-    if( response.getResponseCode() === 200){
+    // construct the POST headers
+     var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer '+ token,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
 
+    Logger.log("Request signatureRequestId");
+    Logger.log("POST on: %s",signatureRequestUrl);
+    Logger.log("POST with: %s",headers);
+    var response = httpPOSTRequest(signatureRequestUrl, headers, "");
+
+    if( response.getResponseCode() == 200 || response.getResponseCode() == 201){
+
+      Logger.log("GOOD signatureRequestId");
       signatureRequestId =  getAttributeFromHTTPResponse(response, 'id');
-      var url = signatureImageUrl + signatureRequestId;
+      Logger.log("Signature Request Id: %s ",signatureRequestId);
+      var url = signatureRequestUrl + '/' + signatureRequestId;
 
       // pull the request id until answer/timeout
       signatureImageId = periodicSignatureStatusPull(url, token);
 
     } else {
 
+      Logger.log("INVALID signatureRequestId");
       signatureImageId = 'invalid';
     }
 
@@ -50,11 +59,20 @@ function requestSignature(token) {
  * @returns {object} signatureImageId, the id of the siganture's image
  */
 function periodicSignatureStatusPull(url, token){
-    var timeout = 20; // 20 * 3000ms = 1 minute
+    var timeout = 40; // 40 * 3000ms = 2 minute
 
     for (var timer = 0; timer < timeout; timer++) {
 
-        response = httpGETRequest(url, token, null);
+      Logger.log('Periodically pull status');
+
+      // construct the POST headers
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer '+ token,
+        'Content-Type': 'application/x-www-form-urlencoded'
+       };
+
+        response = httpGETRequest(url, headers);
 
         // extract body and filter (status is nested in body)
         var status = getAttributeFromHTTPResponse(response, 'status');
@@ -66,7 +84,7 @@ function periodicSignatureStatusPull(url, token){
           return 'invalid';
         } else if( status === 'approved'){
 
-          signatureImageId = getAttributeFromHTTPResponse(response, 'imageId');
+          signatureImageId = getAttributeFromHTTPResponse(response, 'id');
           return signatureImageId;
         }
 
@@ -85,6 +103,9 @@ function periodicSignatureStatusPull(url, token){
  * @param {object} signatureImageId
  */
 function signDocument(token, signatureImageId) {
+
+  Logger.log("SignDoc: %s || %s",token, signatureImageId);
+
     var preferredHeight = 60;
 
     // circuit breaker
@@ -94,9 +115,16 @@ function signDocument(token, signatureImageId) {
        return;
     }
 
+    var headers = {
+        'Authorization': 'Bearer '+ token
+    };
+
+
     // request image
     var url = signatureImageUrl + signatureImageId + '.png';
-    var image  = httpGETRequest(url, token, null);
+    var response  = httpGETRequest(url, headers);
+
+    var image = response.getBlob();
 
     placeSignature(image,preferredHeight);
 }

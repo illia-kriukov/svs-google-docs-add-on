@@ -42,7 +42,8 @@
         google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
                  console.log("Login success");
-                 if(returnSuccess!="invalid"){
+                 console.log("Value of returnSuccess: "+returnSuccess);
+                 if(returnSuccess != 'invalid'){
                     // save username
                     user = username;
 
@@ -53,7 +54,9 @@
                     $('#sign-out').show();
                  } else {
                     console.log("Token invalid");
-                    $('#error').text("Login failed");
+
+                    alert('Login failed');
+
                     //showError("Login failed","#state0");
                  }
                  element.disabled = false;
@@ -99,13 +102,19 @@
          console.log("Requesting signature for user: %s", user);
 
          token = localStorage.getItem('accessToken');
+         console.log("Token: %s", token);
 
          google.script.run
              .withSuccessHandler(function (returnSuccess, element) {
+               if(returnSuccess != 'invalid'){
                  console.log("Success: signature obtained (signatureImageId: "+returnSuccess+")");
-                 signatureId = returnSuccess;
-                 //element.disabled = false;
-                 changeState("state4");
+                   signatureId = returnSuccess;
+                   //element.disabled = false;
+                   changeState("state4");
+               }else{
+                  changeState("state1");
+               }
+
              })
              .withFailureHandler(function (msg, elements) {
                  console.log("Fail: signature was not obtained");
@@ -134,7 +143,7 @@
                  changeState("state5");
              })
              .withUserObject(this)
-             .signDocument(signatureId);
+             .signDocument(token, signatureId);
      }
 
      /**

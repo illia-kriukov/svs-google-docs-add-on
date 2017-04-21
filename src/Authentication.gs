@@ -1,8 +1,8 @@
 /* Circuit breaking constant*/
-var backendDissabled = true;
+var backendDissabled = false;
 
 /* TODO - Replace with valid baseUrl */
-var baseUrl = 'https://www.google.se';
+var baseUrl = 'http://signature-verification.us-east-1.elasticbeanstalk.com';
 var loginUrl =  baseUrl+ '/oauth/token';
 
 /**
@@ -22,8 +22,12 @@ function login(username, password) {
   }
 
 
-  // construct the auth type
-  var auth = 'c3ZzOnNlY3JldA==';
+  // construct the POST headers
+  var headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Basic c3ZzOnNlY3JldA=='
+  };
 
   // construct the POST request body
   var body =  {
@@ -32,16 +36,20 @@ function login(username, password) {
     'scope': 'svs',
     'grant_type': 'password',
     'client_id': 'svs',
-    'secret': 'secret'
+    'secret': 'secret',
+    'validateHttpsCertificates': false
   };
 
   // send POST request to endpoint and retrieve token
-  var response = httpPOSTRequest(loginUrl , auth, body);
+  var response = httpPOSTRequest(loginUrl, headers, body);
 
-  if( response.getResponseCode() === '200'){
+  Logger.log('After the POST made: %s',response);
+
+  if( response.getResponseCode() == '200'){
 
     // return token
-    var accessToken = getAttributeFromHTTPResponse(response, 'accessToken');
+    var accessToken = getAttributeFromHTTPResponse(response, 'access_token');
+    Logger.log('The extracted token: %s',accessToken);
     return accessToken;
   } else {
 
