@@ -7,53 +7,54 @@
 <body>
     <div class="sidebar branding-below">
         <form>
-
             <div class="state-window" id="state0">
-             <h1>Sign in to SVS</h1>
-             <p>Do not have an account? Use our mobile application to sign up.</p><br>
-             <input class="signin-input" type="text" id="username" placeholder="Username"><br><br>
-             <input class="signin-input" type="password" id="password" placeholder="Password"><br><br>
-             <button class="signin-input" id="sign-in">Sign in</button><br>
+                <h1>Sign in to SVS</h1>
+                <p>Do not have an account? Use our mobile application to sign up.</p><br>
+                <input class="signin-input" type="text" id="username" placeholder="Username"><br><br>
+                <input class="signin-input" type="password" id="password" placeholder="Password"><br><br>
+                <button class="signin-input" id="sign-in">Sign in</button>
+                <br>
             </div>
 
             <div class="state-window" id="state1" style="display: none">
-              <div class="sign-button-div" >
-              <a class="sign-button-a" id="sign-request">
-                <img class="sign-button-img" src="https://s-media-cache-ak0.pinimg.com/564x/f9/49/4d/f9494d2119692a83bdd2044fc083d9c7.jpg">
-                <h1>Sign this document</h1>
-              </a>
-              </div>
-              <br/><br/>
-              <button class="signin-input" id="sign-out">Sign out</button><br>
+                <div class="sign-button-div">
+                    <a class="sign-button-a" id="sign-request">
+                        <img class="sign-button-img"
+                             src="https://s-media-cache-ak0.pinimg.com/564x/f9/49/4d/f9494d2119692a83bdd2044fc083d9c7.jpg">
+                        <h1>Sign this document</h1>
+                    </a>
+                </div>
+                <br/><br/>
+                <button class="signin-input" id="sign-out">Sign out</button>
+                <br>
             </div>
 
             <div class="state-window" id="state2" style="display: none">
-             <h1>Signing in progress...</h1>
-             <p>Follow instructions <br>on your android phone.</p>
+                <h1>Signing in progress...</h1>
+                <p>Follow instructions <br>on your android phone.</p>
             </div>
 
             <div class="state-window" id="state3" style="display: none">
-             <h1>Signature declined</h1>
-             <img class="state-img" src="https://cdn.pixabay.com/photo/2012/04/12/20/12/x-30465_960_720.png"><br><br>
-             <button id="sign-again">Try again</button>
+                <h1>Signature declined</h1>
+                <img class="state-img" src="https://cdn.pixabay.com/photo/2012/04/12/20/12/x-30465_960_720.png"><br><br>
+                <button id="sign-again">Try again</button>
             </div>
 
             <div class="state-window" id="state4" style="display: none">
-             <h1>Signature obtained</h1>
-             <p>Place the cursor where<br> you wish to place the<br> signature and click the<br> following button.</p>
-             <button id="sign-place">Place signature</button>
+                <h1>Signature obtained</h1>
+                <p>Place the cursor where<br> you wish to place the<br> signature and click the<br> following button.
+                </p>
+                <button id="sign-place">Place signature</button>
             </div>
 
             <div class="state-window" id="state5" style="display: none">
-             <h1>Document signed</h1>
-             <img class="state-img" src="https://media.licdn.com/mpr/mpr/shrinknp_400_400/p/5/005/06d/102/1a759f3.jpg"><br><br>
-             <button id="sign-new">New signature</button>
+                <h1>Document signed</h1>
+                <img class="state-img"
+                     src="https://media.licdn.com/mpr/mpr/shrinknp_400_400/p/5/005/06d/102/1a759f3.jpg"><br><br>
+                <button id="sign-new">New signature</button>
             </div>
 
-            <div class="error" id="error">
-
-            </div>
-
+            <div class="error" id="error"></div>
         </form>
     </div>
 
