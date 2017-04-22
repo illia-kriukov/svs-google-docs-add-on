@@ -11,188 +11,159 @@
     //this should depend on a session or token saved (either state0 or state1)
     changeState("state0");
 
-
-    // TODO Implement Login / Sign up functionality.
-    $(function () {
-        user = "test@gmail.com";
-    });
-
     /**
      * Button click handlers.
      */
     $(function () {
         $('#sign-in').click(runLogin);
         $('#sign-out').click(runLogout);
-
         $('#sign-request').click(runSigning);
         $('#sign-place').click(runPlacing);
-        $('#sign-new').click(runInitGui);
+        $('#sign-new').click(runSignNew);
         $('#sign-again').click(runTryAgain);
     });
 
     /**
-     * Runs a server-side function to obtain a token from backend.
+     * Sign in.
+     *
+     * Runs a server-side function to obtain an access_token from the server.
+     * Save access_token to the local storage.
      */
-    function runLogin(){
+    function runLogin() {
         this.disabled = true;
         console.log("Signing in...");
-        var username =  $('#username').val();
-        var password =  $('#password').val();
+        var username = $('#username').val();
+        var password = $('#password').val();
 
-        google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Login success");
-                 console.log("Value of returnSuccess: "+returnSuccess);
-                 if(returnSuccess != 'invalid'){
-                    // save username
-                    user = username;
-
-                    // save token
-                    localStorage.setItem( 'accessToken', returnSuccess);
-
-                    changeState("state1");
-                    $('#sign-out').show();
-                 } else {
-                    console.log("Token invalid");
-
-                    alert('Login failed');
-
-                    //showError("Login failed","#state0");
-                 }
-                 element.disabled = false;
-
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Login failed"+msg + " ::: " + elements);
-                 elements.disabled = false;
-
-             })
-             .withUserObject(this)
-             .login(username,password);
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            console.log("Login success");
+            console.log("Value of returnSuccess: " + returnSuccess);
+            if (returnSuccess != 'invalid') {
+                user = username;
+                localStorage.setItem('accessToken', returnSuccess);
+                changeState("state1");
+                $('#sign-out').show();
+            } else {
+                console.log("Token invalid");
+                alert('Login failed');
+                //showError("Login failed","#state0");
+            }
+            element.disabled = false;
+        }).withFailureHandler(function (msg, elements) {
+            console.log("Login failed" + msg + " ::: " + elements);
+            elements.disabled = false;
+        }).withUserObject(this).login(username, password);
     }
 
     /**
-     * Handle sign out.
+     * Sign out.
+     *
+     * Remove access_toke from the local storage.
      */
-    function runLogout(){
+    function runLogout() {
         this.disabled = true;
         console.log("Signing out...");
 
-        google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 $('#sign-out').hide();
-                 changeState("state0");
-                 // erase token
-                 localStorage.removeItem('accessToken');
-                 element.disabled = false;
-             })
-             .withFailureHandler(function (msg, elements) {
-                 elements.disabled = false;
-             })
-             .withUserObject(this)
-             .emptyFunc();
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            $('#sign-out').hide();
+            changeState("state0");
+            localStorage.removeItem('accessToken');
+            element.disabled = false;
+        }).withFailureHandler(function (msg, elements) {
+            elements.disabled = false;
+        }).withUserObject(this).emptyFunc();
     }
 
     /**
+     * Request signature from the server.
+     *
      * Runs a server-side function to request the signature.
      */
-     function runSigning() {
-         //this.disabled = true;
-         changeState("state2");
-         console.log("Requesting signature for user: %s", user);
+    function runSigning() {
+        //this.disabled = true;
+        changeState("state2");
+        console.log("Requesting signature for user: %s", user);
 
-         token = localStorage.getItem('accessToken');
-         console.log("Token: %s", token);
+        token = localStorage.getItem('accessToken');
+        console.log("Token: %s", token);
 
-         google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-               if(returnSuccess != 'invalid'){
-                 console.log("Success: signature obtained (signatureImageId: "+returnSuccess+")");
-                   signatureId = returnSuccess;
-                   //element.disabled = false;
-                   changeState("state4");
-               }else{
-                  changeState("state1");
-               }
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            if (returnSuccess != 'invalid') {
+                console.log("Success: signature obtained (signatureImageId: " + returnSuccess + ")");
+                signatureId = returnSuccess;
+                //element.disabled = false;
+                changeState("state4");
+            } else {
+                changeState("state1");
+            }
+        }).withFailureHandler(function (msg, elements) {
+            console.log("Fail: signature was not obtained");
+            //element.disabled = false;
+            changeState("state3");
+        }).withUserObject(this).requestSignature(token);
+    }
 
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: signature was not obtained");
-                 //element.disabled = false;
-                 changeState("state3");
-             })
-             .withUserObject(this)
-             .requestSignature(token);
-
-     }
-
-     /**
+    /**
+     * Place signature in the document.
+     *
      * Runs a server-side function to place the signature in the document.
      */
-     function runPlacing() {
-          this.disabled = true;
-          google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: document signed");
-                 element.disabled = false;
-                 changeState("state5");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: document was not signed");
-                 elements.disabled = false;
-                 changeState("state5");
-             })
-             .withUserObject(this)
-             .signDocument(token, signatureId);
-     }
+    function runPlacing() {
+        this.disabled = true;
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            console.log("Success: document signed");
+            element.disabled = false;
+            changeState("state5");
+        }).withFailureHandler(function (msg, elements) {
+            console.log("Fail: document was not signed");
+            elements.disabled = false;
+            changeState("state5");
+        }).withUserObject(this).signDocument(token, signatureId);
+    }
 
-     /**
-     * Initialize the GUI (back to first page).
+    /**
+     * Request new signature.
+     *
+     * Back to first page (state #1) to request new signature after successful attempt.
      */
-     function runInitGui(){
-          this.disabled = true;
-          google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 element.disabled = false;
-                 changeState("state1");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 elements.disabled = false;
-                 changeState("state1");
-             })
-             .withUserObject(this)
-             .emptyFunc();
-     }
+    function runSignNew() {
+        this.disabled = true;
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            element.disabled = false;
+            changeState("state1");
+        }).withFailureHandler(function (msg, elements) {
+            elements.disabled = false;
+            changeState("state1");
+        }).withUserObject(this).emptyFunc();
+    }
 
-     /**
+    /**
+     * Request signature again.
+     *
      * Runs a server-side function to request the signature after unsuccessful attempt.
      */
-     function runTryAgain(){
-         this.disabled = true;
-         changeState("state2");
-         console.log("runSigning for user: %s", user);
+    function runTryAgain() {
+        this.disabled = true;
+        changeState("state2");
+        console.log("runSigning for user: %s", user);
 
-         google.script.run
-             .withSuccessHandler(function (returnSuccess, element) {
-                 console.log("Success: signature obtained (id: "+returnSuccess+")");
-                 element.disabled = false;
-                 signatureId = returnSuccess;
-                 changeState("state4");
-             })
-             .withFailureHandler(function (msg, elements) {
-                 console.log("Fail: signature was not obtained");
-                 element.disabled = false;
-                 changeState("state3");
-             })
-             .withUserObject(this)
-             .requestSignature(user);
-     }
+        google.script.run.withSuccessHandler(function (returnSuccess, element) {
+            console.log("Success: signature obtained (id: " + returnSuccess + ")");
+            element.disabled = false;
+            signatureId = returnSuccess;
+            changeState("state4");
+        }).withFailureHandler(function (msg, elements) {
+            console.log("Fail: signature was not obtained");
+            element.disabled = false;
+            changeState("state3");
+        }).withUserObject(this).requestSignature(user);
+    }
 
     /**
      * Inserts a div that contains an error message after a given element.
      *
-     * @param msg The error message to display.
-     * @param element The element after which to display the error.
+     * @param msg The error message to display
+     * @param element The element after which to display the error
      */
     function showError(msg, element) {
         //$("error").remove();
@@ -203,13 +174,13 @@
     /**
      * Changes state in graphic user interface.
      *
-     * @param oldName ID of element visible in previous state.
+     * @param oldName ID of element visible in previous state
      * @param newName ID of element visible in next state
      */
-    function changeState(newName){
-        if(currentState!=undefined){
-         var oldEl = document.getElementById(currentState);
-         oldEl.style.display = 'none';
+    function changeState(newName) {
+        if (currentState != undefined) {
+            var oldEl = document.getElementById(currentState);
+            oldEl.style.display = 'none';
         }
 
         var newEl = document.getElementById(newName);
